@@ -6,7 +6,7 @@ import { Route, Switch } from 'react-router-dom'
 import Shop from './pages/shop/Shop'
 import Header from './components/header/Header'
 
-import { auth } from './firebase/firebase.utils'
+import { auth, createUserProfileDocument } from './firebase/firebase.utils'
 
 class App extends React.Component {
   constructor() {
@@ -21,9 +21,28 @@ class App extends React.Component {
 
   componentDidMount() {
     // auth subscriber for persistence of logged-in user
-    this.unsubscribeFromAuth = auth.onAuthStateChanged(user => {
-      this.setState({ currentUser: user })
-      console.log(user)
+    this.unsubscribeFromAuth = auth.onAuthStateChanged(async userAuth => {
+      // this.setState({ currentUser: user })
+      if (userAuth) {
+        
+        const userRef = await createUserProfileDocument(userAuth)
+
+        userRef.onSnapshot(snapShot => {
+          
+          this.setState({
+            currentUser: {
+              id: snapShot.id,
+              ...snapShot.data()
+            }
+          })
+        })
+        
+      }
+
+      else {
+        this.setState({currentUser: userAuth})
+      }
+
     })
   }
 
